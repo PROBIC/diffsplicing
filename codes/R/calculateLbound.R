@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Hande TOPA
+# Copyright (c) 2014, Hande TOPA
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,27 +24,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-negloglik <-
-function(theta,y,mu) {
-
-	# theta = [alpha; beta]
-	# y = the data vector, M*R matrix for M transcripts R replicates
- 
-	M=dim(y)[1]
-	R=dim(y)[2]
-	alpha=theta[1]
-	beta=theta[2]
-
-	if (alpha<0 | beta<0) {
-   		negloglik=-log(0)
-	} else {
-  		y_2=y^2
-  		A=as.matrix(rowSums(y_2))
-  		B=2*mu*as.matrix(rowSums(y))-R*(mu^2)
-  		C=A-B
-  		negloglik=-(M*alpha*log(beta)-M*lgamma(alpha)+M*lgamma(alpha+R/2)-(alpha+R/2)*sum(log(beta+0.5*C)))
+calculateLbound <- function(x) {
+	
+	x=unique(x)
+	sx=sort(x)
+	diff=c()
+	n=dim(x)[1]
+	for (i in 2:n) 
+	
+	{
+		diff=rbind(diff,(x[i]-x[i-1]))
 	}
+	t=min(diff)
+	l_bound=(2*t*erfinv(0.99))/(sqrt(2)*pi)
 	
-	return(negloglik)
-	
+	return(l_bound)
 }
+
+
+erfinv <- function (x) qnorm((1 + x)/2)/sqrt(2)
+

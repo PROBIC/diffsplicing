@@ -24,27 +24,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-negloglik <-
-function(theta,y,mu) {
+readData <-
+function(dataFileNames,start_line,end_line,meanInd,varInd) {
 
-	# theta = [alpha; beta]
-	# y = the data vector, M*R matrix for M transcripts R replicates
- 
-	M=dim(y)[1]
-	R=dim(y)[2]
-	alpha=theta[1]
-	beta=theta[2]
+	noLines=end_line-start_line+1
+        noSkip=start_line-1
+	T=length(dataFileNames)
+	n=end_line-noSkip
+	M=matrix(0,n,T)
+	V=matrix(0,n,T)
 
-	if (alpha<0 | beta<0) {
-   		negloglik=-log(0)
-	} else {
-  		y_2=y^2
-  		A=as.matrix(rowSums(y_2))
-  		B=2*mu*as.matrix(rowSums(y))-R*(mu^2)
-  		C=A-B
-  		negloglik=-(M*alpha*log(beta)-M*lgamma(alpha)+M*lgamma(alpha+R/2)-(alpha+R/2)*sum(log(beta+0.5*C)))
+	for (t in 1:T) {
+
+		dataFileName=dataFileNames[[t]]
+		dat=readVarData(dataFileName,start_line,end_line,meanInd,varInd)
+		M[,t]=as.matrix(dat$mean)
+		V[,t]=as.matrix(dat$variance)
 	}
 	
-	return(negloglik)
-	
+	result=list("mean"=M,"variance"=V)
+	return(result)
+
 }

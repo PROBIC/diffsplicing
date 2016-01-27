@@ -24,27 +24,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-negloglik <-
-function(theta,y,mu) {
+getMeanBiolVar <-
+function(param_filename,G,mcmc_filenames_in,noLines,noSkip) {
 
-	# theta = [alpha; beta]
-	# y = the data vector, M*R matrix for M transcripts R replicates
- 
-	M=dim(y)[1]
-	R=dim(y)[2]
-	alpha=theta[1]
-	beta=theta[2]
-
-	if (alpha<0 | beta<0) {
-   		negloglik=-log(0)
-	} else {
-  		y_2=y^2
-  		A=as.matrix(rowSums(y_2))
-  		B=2*mu*as.matrix(rowSums(y))-R*(mu^2)
-  		C=A-B
-  		negloglik=-(M*alpha*log(beta)-M*lgamma(alpha)+M*lgamma(alpha+R/2)-(alpha+R/2)*sum(log(beta+0.5*C)))
+	library(matrixStats)
+ 	R=length(mcmc_filenames_in)
+	r=1
+	dat1=as.matrix(read.table(as.character(mcmc_filenames_in[r]),nrows=noLines,skip=noSkip))
+	dat=rowMeans(log(dat1))
+	t_v=rowVars(log(dat1))
+ 	dat=as.matrix(dat)
+	params=as.matrix(read.table(as.character(param_filename),nrows=G,skip=0))
+	MU_group=params[,1]
+	alpha_g=params[,2]
+	beta_g=params[,3]
+	v_g=beta_g/alpha_g
+	v_loess = loess(v_g~MU_group, control=loess.control(surface="direct"))
+	m=as.matrix(rowMeans(dat))
+	b_v=matrix(0,noLines,1)
+	for (i in 1:noLines) {
+		b_v[i]=predict(v_loess,m[i,])
 	}
-	
-	return(negloglik)
-	
+	out_d=data.frame(m,b_v)
+	names(out_d)=c("overall_mean","biol_var")
+	meanvarFileName=paste(as.character(mcmc_filenames_in[1]),"_MeanBiolVar",sep="")
+	write.table(out_d,file=meanvarFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
+
 }

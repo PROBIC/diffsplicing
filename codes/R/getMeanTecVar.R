@@ -24,27 +24,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-negloglik <-
-function(theta,y,mu) {
+getMeanTecVar <-
+function(mcmc_filenames_in,noLines,noSkip) {
+	
+	library(matrixStats)
+ 	R=length(mcmc_filenames_in)
 
-	# theta = [alpha; beta]
-	# y = the data vector, M*R matrix for M transcripts R replicates
- 
-	M=dim(y)[1]
-	R=dim(y)[2]
-	alpha=theta[1]
-	beta=theta[2]
-
-	if (alpha<0 | beta<0) {
-   		negloglik=-log(0)
+	r=1
+	dat1=as.matrix(read.table(as.character(mcmc_filenames_in[r]),nrows=noLines,skip=noSkip))
+	if (grepl("reltr",as.character(mcmc_filenames_in[r]))) {
+	   dat=rowMeans((dat1))
+	   t_v=rowVars((dat1))
 	} else {
-  		y_2=y^2
-  		A=as.matrix(rowSums(y_2))
-  		B=2*mu*as.matrix(rowSums(y))-R*(mu^2)
-  		C=A-B
-  		negloglik=-(M*alpha*log(beta)-M*lgamma(alpha)+M*lgamma(alpha+R/2)-(alpha+R/2)*sum(log(beta+0.5*C)))
-	}
+	   dat=rowMeans(log(dat1))
+           t_v=rowVars(log(dat1))
+	} 
+
+	dat=as.matrix(dat)
 	
-	return(negloglik)
-	
+	out_d=data.frame(dat,t_v)
+	names(out_d)=c("rep_means","tec_var")
+	meanvarFileName=paste(as.character(mcmc_filenames_in[1]),"_MeanTecVar",sep="")
+	write.table(out_d,file=meanvarFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
+
 }

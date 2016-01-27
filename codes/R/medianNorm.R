@@ -24,27 +24,32 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-negloglik <-
-function(theta,y,mu) {
+medianNorm <-
+function(mcmc_filenames_in,noLines,noSkip) {
+					   
+	library(matrixStats)
+	R=length(mcmc_filenames_in)
 
-	# theta = [alpha; beta]
-	# y = the data vector, M*R matrix for M transcripts R replicates
+	r=1
+	dat1=as.matrix(read.table(as.character(mcmc_filenames_in[r]),nrows=noLines,skip=noSkip))
+	dat=rowMeans(dat1)
  
-	M=dim(y)[1]
-	R=dim(y)[2]
-	alpha=theta[1]
-	beta=theta[2]
-
-	if (alpha<0 | beta<0) {
-   		negloglik=-log(0)
-	} else {
-  		y_2=y^2
-  		A=as.matrix(rowSums(y_2))
-  		B=2*mu*as.matrix(rowSums(y))-R*(mu^2)
-  		C=A-B
-  		negloglik=-(M*alpha*log(beta)-M*lgamma(alpha)+M*lgamma(alpha+R/2)-(alpha+R/2)*sum(log(beta+0.5*C)))
+	if (R>1) {
+	    for (r in (2:R)) {
+ 	   	   d=as.matrix(read.table(as.character(mcmc_filenames_in[r]),nrows=noLines,skip=noSkip))
+		   dat=cbind(dat,rowMeans(d))	
+		   }
 	}
-	
-	return(negloglik)
-	
+
+	dat=as.matrix(dat)
+	nT=dim(dat)[2] # number of time points
+	gM=dat/exp(rowSums(log(dat))/nT) # geometric mean normalization
+	scaleFactors=as.matrix(colMedians(gM)) # median across genes at each time point
+							
+	out_d=data.frame(scaleFactors)
+	names(out_d)=c("scaling factors")
+	FileName=as.character("scaling_factors")
+	write.table(out_d,file=FileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
+
 }
+

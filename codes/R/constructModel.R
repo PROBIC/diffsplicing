@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Hande TOPA
+# Copyright (c) 2014, Hande TOPA
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,27 +24,40 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-negloglik <-
-function(theta,y,mu) {
+constructModel <-
+function (x,y,v,covarianceTypes) {
 
-	# theta = [alpha; beta]
-	# y = the data vector, M*R matrix for M transcripts R replicates
- 
-	M=dim(y)[1]
-	R=dim(y)[2]
-	alpha=theta[1]
-	beta=theta[2]
+        list_covTypes=list()
 
-	if (alpha<0 | beta<0) {
-   		negloglik=-log(0)
-	} else {
-  		y_2=y^2
-  		A=as.matrix(rowSums(y_2))
-  		B=2*mu*as.matrix(rowSums(y))-R*(mu^2)
-  		C=A-B
-  		negloglik=-(M*alpha*log(beta)-M*lgamma(alpha)+M*lgamma(alpha+R/2)-(alpha+R/2)*sum(log(beta+0.5*C)))
+        if ("rbf" %in% covarianceTypes) {
+		l_bound = calculateLbound(x)
+		iw_upperbound=1/(l_bound^2)
+		iw_lowerbound=1/(tail(x,1)^2)
+		list_rbf=list(type="rbf",options=list(inverseWidthBounds=c(iw_lowerbound,iw_upperbound)))
+		list_covTypes=append(list_covTypes,list(list_rbf))
 	}
-	
-	return(negloglik)
-	
+        if ("bias" %in% covarianceTypes) {
+                list_bias=list(type="bias")
+                list_covTypes=append(list_covTypes,list(list_bias))
+        }
+        if ("white" %in% covarianceTypes) {
+		list_white=list(type="white")
+		list_covTypes=append(list_covTypes,list(list_white))
+	}
+        if ("fixedvariance" %in% covarianceTypes) {
+		list_fixedvar=list(type="parametric", realType="fixedvariance",options=list(variance=v,input=x))
+		list_covTypes=append(list_covTypes,list(list_fixedvar))
+	}
+
+
+	options=gpOptions(approx="ftc")
+	options$kern=list(type="cmpnd",comp=list_covTypes)
+	model = gpCreate(dim(x)[2], dim(y)[2], x, y, options)
+
+	return(model)
+
 }
+
+
+
+

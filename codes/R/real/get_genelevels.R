@@ -14,7 +14,6 @@ function(indexFile,mcmcFileName,noSkip,start_line,end_line,sep="\t") {
 	
 	J=ncol(mcmc_data) # number of MCMC samples in the data file: 500.
 	
-	#tr_ratios=matrix(0,noLines,J)
 	gene_levels=matrix(0,N,J)
 	
 	for (i in 1:N) {
@@ -28,15 +27,12 @@ function(indexFile,mcmcFileName,noSkip,start_line,end_line,sep="\t") {
 			tr_expr=as.matrix(mcmc_data[tr_inds,])
 			gene_expr=as.matrix(tr_expr)
 		}
-		#tr_ratios[tr_inds,]=tr_expr/(repmat(gene_expr,no_tr,1))
 		gene_levels[i,]=gene_expr
 		
 	}
 	
 	genelevelsFileName=paste(mcmcFileName,"_gene",sep="")
-	#trratiosFileName=paste(mcmcFileName,"_trratios",sep="")
 	write.table(gene_levels,file=genelevelsFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
-	#write.table(tr_ratios,file=trratiosFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
 	
 }
 	

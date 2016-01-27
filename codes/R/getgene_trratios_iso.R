@@ -24,63 +24,58 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-getgene_trratios <-
-function(indexFile,mcmcFileName,noSkip,start_line,end_line,scaling_ind=0,scalingFactors='scaling_factors',sep="\t") {
+getgene_trratios_iso <-
+function(indexFile,trratioFileName,noSkip,start_line,end_line,sep="\t") {
 	
 	source("repmat.R")
 
-	if (scaling_ind==0) {
-		sF=1
-	} else {
-		sF=as.matrix(read.table(scalingFactors)) # scaling factors, if median normalization is needed.
-		sF=sF[scaling_ind]  # scaling factor at the time point of the given data
-	}
-
+	library(matrixStats)
+	
 	noLines=end_line-start_line+1
 	
 	I=read.table(indexFile,nrows=noLines)
 	I=as.matrix(I)
 	N=max(I) # number of genes: 3811
 	
-	mcmc_data=read.table(mcmcFileName,skip=noSkip,nrows=noLines)
-	mcmc_data=as.matrix(mcmc_data)
+	mcmc_data=read.table(trratioFileName,skip=0,nrows=noLines)
+	mcmc_data=as.matrix(mcmc_data) # trratios
 	
 	J=ncol(mcmc_data) # number of MCMC samples in the data file: 500.
 	
 	tr_ratios=matrix(0,noLines,J)
-	tr_levels=matrix(0,noLines,J)
-	gene_levels=matrix(0,N,J)
+	
 	
 	for (i in 1:N) {
 		
 		tr_inds=which(I %in% i)
 		no_tr=length(tr_inds)
 		if (no_tr>1) {
-			tr_expr=mcmc_data[tr_inds,]/sF
-			gene_expr=matrix(colSums(tr_expr),1,J)
+			tr_expr=as.matrix(mcmc_data[tr_inds,])
+			gene_expr=matrix((apply(tr_expr, 2, prod))^(1/no_tr),nrow=1,ncol=J)
 		} else {
-			tr_expr=as.matrix(mcmc_data[tr_inds,])/sF
-			gene_expr=as.matrix(tr_expr)
+			tr_expr=matrix(mcmc_data[tr_inds,],nrow=no_tr,ncol=J)
+			gene_expr=matrix((apply(tr_expr, 2, prod))^(1/no_tr),nrow=1,ncol=J)
 		}
 		tr_ratios[tr_inds,]=tr_expr/(repmat(gene_expr,no_tr,1))
-		tr_levels[tr_inds,]=tr_expr
-		gene_levels[i,]=gene_expr
 		
 	}
 	
-	if (scaling_ind==0) {
-		genelevelsFileName=paste(mcmcFileName,"_gene",sep="")
-		trratiosFileName=paste(mcmcFileName,"_reltr",sep="")
-		trlevelsFileName=paste(mcmcFileName,"_abstr",sep="")
-	} else {
-		genelevelsFileName=paste(mcmcFileName,"_gene_scaled",sep="")
-		trratiosFileName=paste(mcmcFileName,"_reltr_scaled",sep="")
-		trlevelsFileName=paste(mcmcFileName,"_abstr_scaled",sep="")
-	}	
-	
-	write.table(gene_levels,file=genelevelsFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
-	write.table(tr_ratios,file=trratiosFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
-	write.table(tr_levels,file=trlevelsFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
+	m_isotr=rowMeans(tr_ratios)
+	v_isotr=rowVars(tr_ratios)
 
+	m_logisotr=rowMeans(log(tr_ratios))
+	v_logisotr=rowVars(log(tr_ratios))
+
+	
+	out_d=data.frame(m_isotr,v_isotr)
+	names(out_d)=c("means","tech_var")
+	meanvarFileName=paste(as.character(trratioFileName),"_MeanTecVar_iso_tr",sep="")
+	write.table(out_d,file=meanvarFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
+
+	out_d=data.frame(m_logisotr,v_logisotr)
+	names(out_d)=c("means","tech_var")
+	meanvarFileName=paste(as.character(trratioFileName),"_MeanTecVar_logiso_tr",sep="")
+	write.table(out_d,file=meanvarFileName,quote=F,sep='\t',col.names=FALSE,row.names=FALSE)
+	
 }
 	

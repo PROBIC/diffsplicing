@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Hande TOPA
+# Copyright (c) 2014, Hande TOPA
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,27 +24,58 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-negloglik <-
-function(theta,y,mu) {
-
-	# theta = [alpha; beta]
-	# y = the data vector, M*R matrix for M transcripts R replicates
- 
-	M=dim(y)[1]
-	R=dim(y)[2]
-	alpha=theta[1]
-	beta=theta[2]
-
-	if (alpha<0 | beta<0) {
-   		negloglik=-log(0)
+fixedvarianceKernCompute <-
+function (kern, x, x2) {
+	if ( nargs()<3 ) {
+		k <- diag(kern$fixedvariance[,1])
 	} else {
-  		y_2=y^2
-  		A=as.matrix(rowSums(y_2))
-  		B=2*mu*as.matrix(rowSums(y))-R*(mu^2)
-  		C=A-B
-  		negloglik=-(M*alpha*log(beta)-M*lgamma(alpha)+M*lgamma(alpha+R/2)-(alpha+R/2)*sum(log(beta+0.5*C)))
+		x1dim <- dim(as.array(x))[1]
+		x2dim <- dim(as.array(x2))[1]
+		k <- matrix(0, nrow=x1dim, ncol=x2dim)
 	}
+	return (k)
+}
+
+fixedvarianceKernExtractParam <-
+function (kern, only.values=TRUE,
+untransformed.values=TRUE) {
+	params <- c()
 	
-	return(negloglik)
+	return (params)
+}
+
+
+fixedvarianceKernDiagCompute <-
+function (kern, x) {
+	k <- kern$fixedvariance
+	return (k)
+}
+
+
+fixedvarianceKernGradient <-
+function(kern,x,x2,covGrad) {
+	
+	g=0
+
+	return(g)
+	
+}
+
+fixedvarianceKernExpandParam <-
+function(kern,params) {
+	kern=kern
+	return(kern)
+	
+}
+
+fixedvarianceKernParamInit <-
+function(kern) {
+	kern$fixedvariance=kern$options$variance
+	kern$fixedvariance_times=kern$options$input
+	kern$use_fixedvariance=1
+	kern$nParams=0
+	kern$isStationary=TRUE
+	
+	return(kern)
 	
 }

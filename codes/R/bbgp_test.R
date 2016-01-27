@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Hande TOPA
+# Copyright (c) 2014, Hande TOPA
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,27 +24,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-negloglik <-
-function(theta,y,mu) {
+bbgp_test <-
+function(x,y,v,indModelCovTypes,depModelCovTypes) {
 
-	# theta = [alpha; beta]
-	# y = the data vector, M*R matrix for M transcripts R replicates
- 
-	M=dim(y)[1]
-	R=dim(y)[2]
-	alpha=theta[1]
-	beta=theta[2]
+	model=constructModel(x,y,v,indModelCovTypes)	
+	params_init=getInitParams(model)
+	model = modelExpandParam(model,params_init)		
+	model0 = gpOptimise(model, 0)	
+	
+        LogLik0=gpLogLikelihood(model0)
+	white_var=model0$kern$comp[[1]]$variance
 
-	if (alpha<0 | beta<0) {
-   		negloglik=-log(0)
-	} else {
-  		y_2=y^2
-  		A=as.matrix(rowSums(y_2))
-  		B=2*mu*as.matrix(rowSums(y))-R*(mu^2)
-  		C=A-B
-  		negloglik=-(M*alpha*log(beta)-M*lgamma(alpha)+M*lgamma(alpha+R/2)-(alpha+R/2)*sum(log(beta+0.5*C)))
-	}
+	model=constructModel(x,y,v,depModelCovTypes)	
+	params_init=getInitParams(model)
+	model = modelExpandParam(model,params_init)		
+	model1 = gpOptimise(model, 0)	
 	
-	return(negloglik)
-	
+        LogLik1=gpLogLikelihood(model1)
+
+	BF=LogLik1-LogLik0
+
+	result=list("independentModel"=model0,"dependentModel"=model1,"BF"=BF)
+
+	return(result)
+
 }
