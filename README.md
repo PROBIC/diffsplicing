@@ -18,8 +18,9 @@ Very briefly, our methods outline can be summarized by the following steps:
 5. Ranking genes and transcripts by Bayes factors
 
 If one is interested in reproducing the results presented in the paper, (s)he may follow the following instructions.
-On the other hand, if you would like to apply our method with your own data, we recommend you to use the software
-package (to be released soon) for better user experience. 
+On the other hand, if you would like to apply our method with your own data, we recommend you to use our GPrank R
+package for better user experience. GPrank is available both on [CRAN](https://CRAN.R-project.org/package=GPrank) and
+[GitHub](https://github.com/PROBIC/GPrank).
 
 (The following functions are included in *run_functions.R*. So, remember first: `source("run_functions.R")`.)
 
