@@ -1,7 +1,7 @@
 # diffsplicing
 ## Analysis of differential RNA splicing from RNA-seq time series data
 
-Welcome to the diffsplicing repository! Here you can find the codes that we have implemented for our paper titled "Analysis of differential splicing suggests different modes of short-term splicing regulation". 
+Welcome to the diffsplicing repository! Here you can find the codes that we have implemented for our paper [Analysis of differential splicing suggests different modes of short-term splicing regulation](http://dx.doi.org/10.1093/bioinformatics/btw283). 
 In our paper, we study short-term changes in splicing during signalling response within a cell line, using the RNA-seq time series data on estrogen receptor alpha (ERα) signalling response in MCF7 breast
 cancer cell line. The data has been introduced by [Honkela, A. et al.](http://www.pnas.org/content/112/42/13115.abstract) and is accessible in the Gene Expression Omnibus (GEO) database with accession
 number [GSE62789](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE62789).
